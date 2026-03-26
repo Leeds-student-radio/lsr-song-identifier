@@ -39,11 +39,18 @@ async def identify_song(stream_url: str):
             os.remove("temp_stream.mp3")
 
         # 4. Extract the song info
+       # 4. Extract the song info
         if 'track' in out:
+            track_info = out['track']
+            
+            # Safely grab the image URL if Shazam has one for this song
+            image_url = track_info.get('images', {}).get('coverart', '')
+            
             return {
                 "success": True, 
-                "title": out['track']['title'], 
-                "artist": out['track']['subtitle']
+                "title": track_info.get('title', 'Unknown Title'), 
+                "artist": track_info.get('subtitle', 'Unknown Artist'),
+                "image": image_url
             }
         else:
             return {"success": False, "message": "Song not recognized."}
