@@ -6,10 +6,13 @@ from shazamio import Shazam
 
 app = FastAPI()
 
+# --- NEW: Dictionary to track the last song recognized per stream ---
+last_seen_songs = {}
+
 # This is CRITICAL. It allows your GitHub Pages site to talk to this server.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In the future, you can change "*" to your actual website URL for security
+    allow_origins=["https://www.thisislsr.com/"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,17 +42,31 @@ async def identify_song(stream_url: str):
             os.remove("temp_stream.mp3")
 
         # 4. Extract the song info
-       # 4. Extract the song info
         if 'track' in out:
             track_info = out['track']
             
-            # Safely grab the image URL if Shazam has one for this song
+            title = track_info.get('title', 'Unknown Title')
+            artist = track_info.get('subtitle', 'Unknown Artist')
             image_url = track_info.get('images', {}).get('coverart', '')
+            
+            # --- NEW LOGIC START ---
+            # Create a unique identifier for the current song
+            current_song_id = f"{title} - {artist}"
+            
+            # Check if this song is the exact same as the last one we heard on this stream
+            if last_seen_songs.get(stream_url) == current_song_id:
+                is_new_song = False
+            else:
+                is_new_song = True
+                # Update our tracking dictionary with the new song
+                last_seen_songs[stream_url] = current_song_id
+            # --- NEW LOGIC END ---
             
             return {
                 "success": True, 
-                "title": track_info.get('title', 'Unknown Title'), 
-                "artist": track_info.get('subtitle', 'Unknown Artist'),
+                "is_new_song": is_new_song,  # Your frontend can check this flag!
+                "title": title, 
+                "artist": artist,
                 "image": image_url
             }
         else:
