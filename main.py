@@ -12,7 +12,8 @@ last_seen_songs = {}
 # This is CRITICAL. It allows your GitHub Pages site to talk to this server.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.thisislsr.com/"], 
+    allow_origins=["https://www.thisislsr.com",
+        "https://thisislsr.com"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
